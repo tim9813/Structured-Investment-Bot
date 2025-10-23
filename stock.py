@@ -10,14 +10,21 @@ user_selected_stocks = {}
 # Search function using Yahoo
 def search_companies(query):
     query = query.strip()
-    tickers = Ticker(query)
-    search_result = tickers.symbols
+    ticker_obj = Ticker(query)
+    search_result = ticker_obj.symbols  # This gives a list of symbols Yahoo thinks matches
+
     matches = []
     for symbol in search_result:
-        info = Ticker(symbol).quote_type
-        name = info.get(symbol, {}).get("longName") or info.get(symbol, {}).get("shortName")
-        if name and query.lower() in name.lower():
-            matches.append({"name": name, "ticker": symbol})
+        try:
+            info = Ticker(symbol).quote_type
+            if isinstance(info, dict) and symbol in info:
+                name = info[symbol].get("longName") or info[symbol].get("shortName")
+                if name and query.lower() in name.lower():
+                    matches.append({"name": name, "ticker": symbol})
+        except Exception as e:
+            print(f"Error processing {symbol}: {e}")
+            continue
+
     return matches
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
