@@ -1,5 +1,5 @@
 import asyncio
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
 from yahooquery import Ticker, search
 
@@ -29,10 +29,8 @@ async def search_companies(query, max_results=10):
     try:
         # Run blocking API call in executor to avoid blocking event loop
         loop = asyncio.get_event_loop()
-        # Use the search function, not Ticker.search
         result = await loop.run_in_executor(None, search, q)
         
-        # result is a dict with 'quotes' key
         quotes = result.get("quotes", [])
         
         if not quotes:
@@ -55,15 +53,68 @@ async def search_companies(query, max_results=10):
         
     except Exception as e:
         error_msg = f"Sorry, search failed. Please try again later."
-        print(f"[ERROR] Search failed for '{q}': {type(e).__name__} - {e}")  # Better logging
+        print(f"[ERROR] Search failed for '{q}': {type(e).__name__} - {e}")
         return [], error_msg
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Welcome! Send me a company name or ticker to begin tracking.")
+    await update.message.reply_text(
+        "Welcome to Stock Tracker Bot! 📈\n\n"
+        "Commands:\n"
+        "/add - Add a new stock to track\n"
+        "/list - View your tracked stocks\n"
+        "/help - Show this message"
+    )
+
+async def add_stock(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Start the process of adding a stock"""
+    user_id = update.message.from_user.id
+    context.user_data["adding_stock"] = True
+    await update.message.reply_text(
+        "🔍 Please send me a company name or ticker symbol to search.\n"
+        "Example: 'Apple' or 'AAPL'\n\n"
+        "Send /cancel to stop."
+    )
+
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Cancel the current operation"""
+    context.user_data["adding_stock"] = False
+    context.user_data["awaiting_choice"] = False
+    context.user_data.pop("options", None)
+    await update.message.reply_text(
+        "❌ Operation cancelled.",
+        reply_markup=ReplyKeyboardRemove()
+    )
+
+async def list_stocks(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """List user's tracked stocks"""
+    user_id = update.message.from_user.id
+    
+    if user_id not in user_selected_stocks or not user_selected_stocks[user_id]:
+        await update.message.reply_text("You haven't added any stocks yet. Use /add to start tracking!")
+        return
+    
+    # If single stock
+    if isinstance(user_selected_stocks[user_id], dict):
+        stock = user_selected_stocks[user_id]
+        response = f"📊 Your tracked stock:\n\n• {stock['name']} ({stock['ticker']})"
+    else:
+        # If multiple stocks (for future enhancement)
+        response = "📊 Your tracked stocks:\n\n"
+        for stock in user_selected_stocks[user_id]:
+            response += f"• {stock['name']} ({stock['ticker']})\n"
+    
+    await update.message.reply_text(response)
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_input = update.message.text.strip()
     user_id = update.message.from_user.id
+    
+    # Check if user is in "adding stock" mode
+    if not context.user_data.get("adding_stock"):
+        await update.message.reply_text(
+            "Please use /add to start adding a stock, or /help for available commands."
+        )
+        return
     
     # Handle ticker selection from keyboard
     if context.user_data.get("awaiting_choice"):
@@ -75,16 +126,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if selected_ticker == company["ticker"]:
                 user_selected_stocks[user_id] = company
                 await update.message.reply_text(
-                    f"✅ Stock '{company['name']}' ({company['ticker']}) selected."
+                    f"✅ Stock '{company['name']}' ({company['ticker']}) selected and added to your tracking list!",
+                    reply_markup=ReplyKeyboardRemove()
                 )
+                # Reset states
                 context.user_data["awaiting_choice"] = False
-                context.user_data.pop("options", None)  # Clean up
+                context.user_data["adding_stock"] = False
+                context.user_data.pop("options", None)
                 return
         
         await update.message.reply_text("Invalid selection. Please reply with a valid ticker from the options.")
         return
     
-    # Search for companies - MUST AWAIT!
+    # Search for companies
     matches, error = await search_companies(user_input)
     
     # Handle errors
@@ -94,7 +148,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Handle no results
     if not matches:
-        await update.message.reply_text("No matching companies found.")
+        await update.message.reply_text(
+            "No matching companies found. Try another search or use /cancel to stop."
+        )
         return
     
     # Single match - auto select
@@ -102,8 +158,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         selected = matches[0]
         user_selected_stocks[user_id] = selected
         await update.message.reply_text(
-            f"✅ Stock '{selected['name']}' ({selected['ticker']}) selected."
+            f"✅ Stock '{selected['name']}' ({selected['ticker']}) selected and added to your tracking list!"
         )
+        # Reset state
+        context.user_data["adding_stock"] = False
     
     # Multiple matches - show keyboard
     else:
@@ -122,7 +180,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 if __name__ == '__main__':
     app = ApplicationBuilder().token(BOT_TOKEN).build()
+    
+    # Command handlers
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", start))
+    app.add_handler(CommandHandler("add", add_stock))
+    app.add_handler(CommandHandler("cancel", cancel))
+    app.add_handler(CommandHandler("list", list_stocks))
+    
+    # Message handler
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
     print("Stock bot with Yahoo Finance is running...")
