@@ -1,7 +1,7 @@
 import asyncio
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
-from yahooquery import Ticker
+from yahooquery import Ticker, search
 
 BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE'
 
@@ -18,7 +18,7 @@ async def search_companies(query, max_results=10):
     Returns:
         tuple: (matches_list, error_message)
     """
-    q = query.strip().lower()
+    q = query.strip()
     
     if not q:
         return [], "Please provide a search query"
@@ -29,8 +29,10 @@ async def search_companies(query, max_results=10):
     try:
         # Run blocking API call in executor to avoid blocking event loop
         loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(None, Ticker.search, q)
+        # Use the search function, not Ticker.search
+        result = await loop.run_in_executor(None, search, q)
         
+        # result is a dict with 'quotes' key
         quotes = result.get("quotes", [])
         
         if not quotes:
@@ -40,19 +42,24 @@ async def search_companies(query, max_results=10):
         for item in quotes[:max_results]:  # Limit results
             symbol = item.get("symbol")
             name = item.get("shortname") or item.get("longname")
+            exchange = item.get("exchDisp", "")
             
             if symbol and name:
-                matches.append({"name": name, "ticker": symbol})
+                matches.append({
+                    "name": name, 
+                    "ticker": symbol,
+                    "exchange": exchange
+                })
         
         return matches, None
         
     except Exception as e:
         error_msg = f"Sorry, search failed. Please try again later."
-        print(f"[ERROR] Search failed for '{q}': {e}")  # Log for debugging
+        print(f"[ERROR] Search failed for '{q}': {type(e).__name__} - {e}")  # Better logging
         return [], error_msg
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Welcome! Send me a company name to begin tracking.")
+    await update.message.reply_text("Welcome! Send me a company name or ticker to begin tracking.")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_input = update.message.text.strip()
@@ -60,7 +67,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Handle ticker selection from keyboard
     if context.user_data.get("awaiting_choice"):
-        selected_ticker = user_input.upper()
+        # Extract ticker from "AAPL - Apple Inc." format
+        selected_ticker = user_input.split(" - ")[0].strip().upper()
         possible = context.user_data.get("options", [])
         
         for company in possible:
@@ -104,7 +112,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["options"] = options
         
         # Create keyboard with ticker and name
-        keyboard = [[f"{comp['ticker']} - {comp['name'][:30]}"] for comp in options]
+        keyboard = [[f"{comp['ticker']} - {comp['name'][:40]}"] for comp in options]
         reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
         
         await update.message.reply_text(
