@@ -1,3 +1,4 @@
+import asyncio
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
 from yahooquery import Ticker
@@ -56,37 +57,65 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_input = update.message.text.strip()
     user_id = update.message.from_user.id
-
+    
+    # Handle ticker selection from keyboard
     if context.user_data.get("awaiting_choice"):
         selected_ticker = user_input.upper()
         possible = context.user_data.get("options", [])
+        
         for company in possible:
             if selected_ticker == company["ticker"]:
                 user_selected_stocks[user_id] = company
-                await update.message.reply_text(f"Stock '{company['name']}' (ticker {company['ticker']}) selected.")
+                await update.message.reply_text(
+                    f"✅ Stock '{company['name']}' ({company['ticker']}) selected."
+                )
                 context.user_data["awaiting_choice"] = False
+                context.user_data.pop("options", None)  # Clean up
                 return
-        await update.message.reply_text("Invalid selection. Please reply with a valid ticker.")
+        
+        await update.message.reply_text("Invalid selection. Please reply with a valid ticker from the options.")
         return
-
-    matches = search_companies(user_input)
-
+    
+    # Search for companies - MUST AWAIT!
+    matches, error = await search_companies(user_input)
+    
+    # Handle errors
+    if error:
+        await update.message.reply_text(error)
+        return
+    
+    # Handle no results
     if not matches:
         await update.message.reply_text("No matching companies found.")
-    elif len(matches) == 1:
+        return
+    
+    # Single match - auto select
+    if len(matches) == 1:
         selected = matches[0]
         user_selected_stocks[user_id] = selected
-        await update.message.reply_text(f"Stock '{selected['name']}' (ticker {selected['ticker']}) selected.")
+        await update.message.reply_text(
+            f"✅ Stock '{selected['name']}' ({selected['ticker']}) selected."
+        )
+    
+    # Multiple matches - show keyboard
     else:
-        options = [comp["ticker"] for comp in matches[:5]]  # limit to top 5 results
+        options = matches[:5]  # limit to top 5 results
         context.user_data["awaiting_choice"] = True
-        context.user_data["options"] = matches[:5]
-        keyboard = ReplyKeyboardMarkup([[ticker] for ticker in options], one_time_keyboard=True)
-        await update.message.reply_text("Multiple matches found. Please choose the ticker:", reply_markup=keyboard)
+        context.user_data["options"] = options
+        
+        # Create keyboard with ticker and name
+        keyboard = [[f"{comp['ticker']} - {comp['name'][:30]}"] for comp in options]
+        reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+        
+        await update.message.reply_text(
+            "Multiple matches found. Please select one:",
+            reply_markup=reply_markup
+        )
 
 if __name__ == '__main__':
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    
     print("Stock bot with Yahoo Finance is running...")
     app.run_polling()
