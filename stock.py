@@ -7,24 +7,48 @@ BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE'
 # In-memory store
 user_selected_stocks = {}
 
-# Search function using Yahoo
-def search_companies(query):
+async def search_companies(query, max_results=10):
+    """Search for companies using Yahoo Finance API.
+    
+    Args:
+        query: Company name or ticker symbol to search for
+        max_results: Maximum number of results to return (default: 10)
+        
+    Returns:
+        tuple: (matches_list, error_message)
+    """
     q = query.strip().lower()
-    # Use YahooQuery search function (added in version 2.x)  
+    
+    if not q:
+        return [], "Please provide a search query"
+    
+    if len(q) < 2:
+        return [], "Query too short. Please enter at least 2 characters"
+    
     try:
-        result = Ticker.search(q)
+        # Run blocking API call in executor to avoid blocking event loop
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, Ticker.search, q)
+        
+        quotes = result.get("quotes", [])
+        
+        if not quotes:
+            return [], f"No companies found for '{query}'"
+        
+        matches = []
+        for item in quotes[:max_results]:  # Limit results
+            symbol = item.get("symbol")
+            name = item.get("shortname") or item.get("longname")
+            
+            if symbol and name:
+                matches.append({"name": name, "ticker": symbol})
+        
+        return matches, None
+        
     except Exception as e:
-        print(f"Error with search for query '{q}': {e}")
-        return []
-    matches = []
-    # result is expected to be a dict with key "quotes" containing list of dicts
-    quotes = result.get("quotes") or []
-    for item in quotes:
-        symbol = item.get("symbol")
-        name   = item.get("shortname") or item.get("longname")
-        if symbol and name and q in name.lower():
-            matches.append({"name": name, "ticker": symbol})
-    return matches
+        error_msg = f"Sorry, search failed. Please try again later."
+        print(f"[ERROR] Search failed for '{q}': {e}")  # Log for debugging
+        return [], error_msg
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Welcome! Send me a company name to begin tracking.")
