@@ -3,7 +3,7 @@ from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
 from yahooquery import Ticker, search
 
-BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE'
+BOT_TOKEN = '8417646815:AAERr0Si20W9zrf71aEdVZZ-qSLRKMPv3-U'
 
 # In-memory store - changed to support multiple stocks per user
 user_selected_stocks = {}  # {user_id: [list of stocks]}
