@@ -5,6 +5,10 @@ require('dotenv').config();
 const yf = require('yahoo-finance2').default;
 const pino = require('pino');
 
+// at the top of server.js, replace your yahoo import with:
+const yf2 = require('yahoo-finance2');
+const yf = yf2.default || yf2;   // works with both CJS/ESM builds
+
 // basic logger
 const logger = pino({ transport: { target: 'pino-pretty' }, level: 'info' });
 
@@ -104,3 +108,4 @@ app.get('/api/stocks/quote', async (req, res) => {
 
 const PORT = 3000;
 app.listen(PORT, () => logger.info('API on http://127.0.0.1:' + PORT));
+
