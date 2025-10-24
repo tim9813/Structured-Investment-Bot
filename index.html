@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Hardcoded Login Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-box {
+      background-color: #111827;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      width: 320px;
+    }
+    h2 {
+      text-align: center;
+      color: #22c55e;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #1f2937;
+      border-radius: 6px;
+      background-color: #0b1220;
+      color: #e5e7eb;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      background-color: #22c55e;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #16a34a;
+    }
+    .error {
+      color: #ef4444;
+      text-align: center;
+      margin-top: 10px;
+    }
+    #app {
+      display: none;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box" id="login-box">
+    <h2>Member Login</h2>
+    <label for="username">Username</label>
+    <input type="text" id="username" placeholder="Enter username" />
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="Enter password" />
+    <button id="loginBtn">Login</button>
+    <div class="error" id="error"></div>
+  </div>
+
+  <div id="app">
+    <h2>✅ Welcome inside!</h2>
+    <p>This is the protected area of your app.</p>
+    <button id="logoutBtn">Logout</button>
+  </div>
+
+  <script>
+    // === HARDCODED LOGIN DETAILS ===
+    const USERNAME = "admin";
+    const PASSWORD = "P@ssw0rd123"; // Change to your desired password
+
+    const loginBox = document.getElementById('login-box');
+    const app = document.getElementById('app');
+    const error = document.getElementById('error');
+
+    document.getElementById('loginBtn').addEventListener('click', () => {
+      const user = document.getElementById('username').value.trim();
+      const pass = document.getElementById('password').value.trim();
+
+      if (user === USERNAME && pass === PASSWORD) {
+        loginBox.style.display = 'none';
+        app.style.display = 'block';
+      } else {
+        error.textContent = '❌ Invalid username or password';
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      app.style.display = 'none';
+      loginBox.style.display = 'block';
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      error.textContent = '';
+    });
+  </script>
+</body>
+</html>
