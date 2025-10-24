@@ -2,31 +2,51 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Login + Tabs + Stocks</title>
+<title>Stock Market Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{background:#0f172a;color:#e5e7eb;font-family:Arial;margin:0;display:flex;justify-content:center;align-items:flex-start;min-height:100vh}
-.wrap{width:1100px;max-width:95vw;margin:24px}
-.box{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:18px}
-h2{margin:0 0 10px}
-label{display:block;margin:8px 0 4px}
-input{width:100%;padding:8px;border:1px solid #1f2937;border-radius:6px;background:#0b1220;color:#e5e7eb}
-button{padding:8px 12px;border:none;border-radius:6px;background:#334155;color:#fff;cursor:pointer}
-button:hover{opacity:.9}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+*{box-sizing:border-box}
+body{background:#0f172a;color:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;margin:0;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:20px}
+.wrap{width:1200px;max-width:100%}
+.box{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:24px;box-shadow:0 4px 6px rgba(0,0,0,.3)}
+h2{margin:0 0 16px;font-size:24px}
+h3{margin:0 0 12px;font-size:20px}
+label{display:block;margin:12px 0 6px;font-weight:500;font-size:14px}
+input{width:100%;padding:10px 12px;border:1px solid #334155;border-radius:8px;background:#0f172a;color:#e5e7eb;font-size:14px;transition:border-color .2s}
+input:focus{outline:none;border-color:#22c55e}
+button{padding:10px 16px;border:none;border-radius:8px;background:#475569;color:#fff;cursor:pointer;font-weight:500;font-size:14px;transition:all .2s}
+button:hover{background:#64748b;transform:translateY(-1px)}
+button:active{transform:translateY(0)}
+button.primary{background:#22c55e;color:#0f172a}
+button.primary:hover{background:#16a34a}
+button.danger{background:#ef4444}
+button.danger:hover{background:#dc2626}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .hidden{display:none}
-.bar{display:flex;gap:8px;margin:8px 0}
-.tab{background:#334155;border:1px solid #1f2937;border-radius:8px;padding:8px 12px;cursor:pointer}
-.tab.active{background:#22c55e;color:#0b1220;font-weight:bold}
-#workspace{background:#ffffff;color:#111827;border:1px dashed #d1d5db;border-radius:10px;min-height:380px;padding:14px;margin-top:10px}
-.card{border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin:8px 0;background:#fff;color:#0b122a}
-.badge{font-size:12px;color:#475569}
-.price{font-weight:bold;font-size:18px}
-.up{color:#16a34a}.down{color:#dc2626}
-.suggest{background:#0b1220;border:1px solid #1f2937;border-radius:8px;margin-top:6px;max-height:220px;overflow:auto}
-.suggest div{padding:8px;border-bottom:1px solid #1f2937;cursor:pointer}
-.suggest div:hover{background:#0f172a}
-.muted{color:#9ca3af;font-size:12px}
+.bar{display:flex;gap:10px;margin:16px 0}
+.tab{background:#334155;border:1px solid #475569;border-radius:10px;padding:12px 20px;cursor:pointer;font-weight:500;transition:all .2s}
+.tab:hover{background:#475569}
+.tab.active{background:#22c55e;color:#0f172a;border-color:#22c55e}
+#workspace{background:#f8fafc;color:#1e293b;border:1px solid #e2e8f0;border-radius:12px;min-height:450px;padding:20px;margin-top:16px}
+.card{border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin:10px 0;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.1);transition:box-shadow .2s}
+.card:hover{box-shadow:0 4px 6px rgba(0,0,0,.15)}
+.badge{font-size:13px;color:#64748b}
+.price{font-weight:bold;font-size:22px;margin:8px 0}
+.up{color:#16a34a;font-weight:600}
+.down{color:#dc2626;font-weight:600}
+.suggest{background:#1e293b;border:1px solid #334155;border-radius:10px;margin-top:8px;max-height:300px;overflow:auto;box-shadow:0 4px 6px rgba(0,0,0,.3)}
+.suggest div{padding:12px;border-bottom:1px solid #334155;cursor:pointer;transition:background .2s}
+.suggest div:hover{background:#334155}
+.suggest div:last-child{border-bottom:none}
+.muted{color:#94a3b8;font-size:13px}
+.error{color:#ef4444;font-size:13px;margin-top:8px}
+.success{color:#22c55e;font-size:13px;margin-top:8px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #475569;border-top-color:#22c55e;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{opacity:.6;pointer-events:none}
+.empty{text-align:center;padding:40px;color:#94a3b8;font-style:italic}
+.meta-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.symbol-name{font-size:18px;font-weight:bold}
 </style>
 </head>
 <body>
@@ -34,176 +54,336 @@ button:hover{opacity:.9}
 
 <!-- LOGIN -->
 <div class="box" id="loginbox">
-  <h2>🔒 Login</h2>
-  <label>Username</label>
-  <input id="user" type="text" placeholder="admin">
-  <label>Password</label>
-  <input id="pass" type="password" placeholder="password">
-  <div class="row" style="margin-top:10px">
-    <button id="loginbtn">Sign in</button>
-  </div>
-  <div id="err" class="muted" style="color:#ef4444;margin-top:8px"></div>
-  <div class="muted">Demo only: client-side check.</div>
+  <h2>🔐 Secure Login</h2>
+  <form id="loginform">
+    <label>Username</label>
+    <input id="user" type="text" placeholder="Enter username" autocomplete="username" required>
+    <label>Password</label>
+    <input id="pass" type="password" placeholder="Enter password" autocomplete="current-password" required>
+    <div class="row" style="margin-top:16px">
+      <button type="submit" class="primary">Sign In</button>
+    </div>
+  </form>
+  <div id="err" class="error"></div>
+  <div class="muted" style="margin-top:12px">Demo: admin / P@ssw0rd123</div>
 </div>
 
 <!-- APP -->
 <div class="box hidden" id="app">
-  <div class="row" style="justify-content:space-between">
-    <h2>✅ Dashboard</h2>
-    <button id="logoutbtn">Log out</button>
+  <div class="row" style="justify-content:space-between;margin-bottom:16px">
+    <h2>📊 Stock Dashboard</h2>
+    <button id="logoutbtn" class="danger">Log Out</button>
   </div>
 
   <!-- Tabs -->
   <div class="bar">
-    <div class="tab active" data-tab="add">Add Structure</div>
-    <div class="tab" data-tab="view">View Structure</div>
-    <div class="tab" data-tab="stocks">Stocks</div>
+    <div class="tab active" data-tab="stocks">📈 Stocks</div>
+    <div class="tab" data-tab="add">➕ Add Structure</div>
+    <div class="tab" data-tab="view">📋 View Structure</div>
   </div>
 
   <div id="workspace">
-    <!-- Add Structure -->
-    <div id="content-add">
-      <h3 style="margin-top:0">Add Structure</h3>
-      <p class="muted">Clean area for your future form.</p>
-      <div class="row">
-        <input id="sName" placeholder="Structure name" style="flex:1">
-        <input id="sType" placeholder="Type" style="flex:1">
-        <button id="btnSave">Save (placeholder)</button>
+    <!-- Stocks -->
+    <div id="content-stocks">
+      <h3>Stock Watchlist</h3>
+      <p class="muted">Search stocks by name or ticker symbol and add them to your watchlist</p>
+
+      <!-- Search -->
+      <div style="position:relative;margin-top:16px">
+        <input id="stockQuery" placeholder="Search stocks (e.g., Apple, TSLA, Microsoft)..." autocomplete="off">
+        <div id="suggestions" class="suggest hidden"></div>
       </div>
-      <div id="saveMsg" class="muted" style="color:#16a34a;display:none;margin-top:6px">Saved (placeholder)</div>
+
+      <!-- Watchlist Actions -->
+      <div class="row" style="justify-content:space-between;margin-top:20px;margin-bottom:12px">
+        <h3 style="margin:0">Your Watchlist</h3>
+        <button id="refreshAll" class="primary">
+          <span id="refreshIcon">🔄</span> Refresh All
+        </button>
+      </div>
+      <div id="cards"></div>
+    </div>
+
+    <!-- Add Structure -->
+    <div id="content-add" class="hidden">
+      <h3>Add Structure</h3>
+      <p class="muted">Create a new structure entry</p>
+      <div style="margin-top:20px">
+        <div class="row" style="align-items:flex-end">
+          <div style="flex:1">
+            <label>Structure Name</label>
+            <input id="sName" placeholder="Enter name">
+          </div>
+          <div style="flex:1">
+            <label>Type</label>
+            <input id="sType" placeholder="Enter type">
+          </div>
+          <button id="btnSave" class="primary">💾 Save</button>
+        </div>
+        <div id="saveMsg" class="success" style="display:none;margin-top:12px">✅ Structure saved successfully!</div>
+      </div>
     </div>
 
     <!-- View Structure -->
     <div id="content-view" class="hidden">
-      <h3 style="margin-top:0">View Structure</h3>
-      <p class="muted">Ready to list your data later.</p>
-      <div class="card"><em>No data yet.</em></div>
-    </div>
-
-    <!-- Stocks -->
-    <div id="content-stocks" class="hidden">
-      <h3 style="margin-top:0">Stocks</h3>
-      <p class="muted">Search by name or ticker (Yahoo). Add to watchlist.</p>
-
-      <!-- Search input + suggestions -->
-      <input id="stockQuery" placeholder="Type name or ticker, e.g. tesla or TSLA">
-      <div id="suggestions" class="suggest hidden"></div>
-
-      <!-- Watchlist -->
-      <div class="row" style="justify-content:space-between;margin-top:10px">
-        <div class="muted">Watchlist</div>
-        <button id="refreshAll">Refresh</button>
-      </div>
-      <div id="cards"></div>
+      <h3>View Structures</h3>
+      <p class="muted">Browse all saved structures</p>
+      <div class="card empty" style="margin-top:20px">No structures saved yet</div>
     </div>
   </div>
 </div>
 
 <script>
-// ===== HARD-CODED LOGIN =====
-const U="admin", P="P@ssw0rd123";
+// ===== CONFIG =====
+const API_BASE = 'http://localhost:3000';
+const CREDENTIALS = { username: 'admin', password: 'P@ssw0rd123' };
+
+// ===== UTILITIES =====
 const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+
+// Session state (in-memory only)
+let sessionActive = false;
+let watchlistSymbols = [];
+let quotesCache = {};
+
+// ===== LOGIN =====
 const loginBox=$("#loginbox"), app=$("#app"), err=$("#err");
 
-// login
-$("#loginbtn").onclick=()=>{
+$("#loginform").onsubmit = (e) => {
+  e.preventDefault();
   const u=$("#user").value.trim(), p=$("#pass").value.trim();
-  if(u===U && p===P){ sessionStorage.setItem("ok","1"); showApp(); }
-  else err.textContent="❌ Invalid username or password";
+  if(u === CREDENTIALS.username && p === CREDENTIALS.password) {
+    sessionActive = true;
+    showApp();
+    err.textContent = "";
+    $("#user").value = "";
+    $("#pass").value = "";
+  } else {
+    err.textContent = "❌ Invalid credentials. Please try again.";
+  }
 };
-$("#logoutbtn").onclick=()=>{ sessionStorage.removeItem("ok"); showLogin(); };
-function showLogin(){ app.classList.add("hidden"); loginBox.classList.remove("hidden"); err.textContent=""; }
-function showApp(){ loginBox.classList.add("hidden"); app.classList.remove("hidden"); }
 
-// tabs
-function setActive(tab){
-  $$(".tab").forEach(t=>t.classList.remove("active"));
-  $(`.tab[data-tab="${tab}"]`).classList.add("active");
-  $("#content-add").classList.toggle("hidden", tab!=="add");
-  $("#content-view").classList.toggle("hidden", tab!=="view");
-  $("#content-stocks").classList.toggle("hidden", tab!=="stocks");
+$("#logoutbtn").onclick = () => {
+  sessionActive = false;
+  watchlistSymbols = [];
+  quotesCache = {};
+  showLogin();
+};
+
+function showLogin() {
+  app.classList.add("hidden");
+  loginBox.classList.remove("hidden");
+  err.textContent = "";
 }
-$$(".tab").forEach(t=> t.addEventListener("click",()=> setActive(t.dataset.tab)));
 
-// placeholder save
-$("#btnSave")?.addEventListener("click",()=>{
-  if(!$("#sName").value.trim() || !$("#sType").value.trim()) { alert("Enter both fields"); return; }
-  $("#saveMsg").style.display="block"; setTimeout(()=>$("#saveMsg").style.display="none",1500);
+function showApp() {
+  loginBox.classList.add("hidden");
+  app.classList.remove("hidden");
+  setActive("stocks");
+  renderCards();
+}
+
+// ===== TABS =====
+function setActive(tab) {
+  $$(".tab").forEach(t => t.classList.remove("active"));
+  $(`.tab[data-tab="${tab}"]`).classList.add("active");
+  $("#content-add").classList.toggle("hidden", tab !== "add");
+  $("#content-view").classList.toggle("hidden", tab !== "view");
+  $("#content-stocks").classList.toggle("hidden", tab !== "stocks");
+}
+$$(".tab").forEach(t => t.addEventListener("click", () => setActive(t.dataset.tab)));
+
+// ===== STRUCTURE SAVE =====
+$("#btnSave")?.addEventListener("click", () => {
+  const name = $("#sName").value.trim();
+  const type = $("#sType").value.trim();
+  if(!name || !type) {
+    alert("⚠️ Please fill in both fields");
+    return;
+  }
+  $("#sName").value = "";
+  $("#sType").value = "";
+  $("#saveMsg").style.display = "block";
+  setTimeout(() => $("#saveMsg").style.display = "none", 2500);
 });
 
-// ===== Stocks UI =====
-const LS_KEY="watchlist";
-function loadWatch(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||"[]"); } catch{ return []; } }
-function saveWatch(list){ localStorage.setItem(LS_KEY, JSON.stringify(list)); }
-function addWatch(symbol){ const s=symbol.toUpperCase(); const list=new Set(loadWatch()); list.add(s); saveWatch([...list]); renderCards(); }
-function removeWatch(symbol){ const s=symbol.toUpperCase(); const next=loadWatch().filter(x=>x!==s); saveWatch(next); renderCards(); }
+// ===== STOCKS =====
+const qEl = $("#stockQuery"), sugEl = $("#suggestions");
+let searchTimeout;
 
-// debounce
-function debounce(fn,ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
+// Debounced search
+qEl.addEventListener("input", () => {
+  clearTimeout(searchTimeout);
+  const query = qEl.value.trim();
+  
+  if(!query) {
+    sugEl.classList.add("hidden");
+    sugEl.innerHTML = "";
+    return;
+  }
+  
+  searchTimeout = setTimeout(() => searchStocks(query), 350);
+});
 
-// search
-const qEl=$("#stockQuery"), sugEl=$("#suggestions");
-async function searchStocks(q){
-  if(!q.trim()){ sugEl.classList.add("hidden"); sugEl.innerHTML=""; return; }
-  try{
-    const r = await fetch("/api/stocks/search?q="+encodeURIComponent(q.trim()));
-    if(!r.ok) throw new Error("search failed");
-    const data = await r.json();
-    const items = data.items||[];
-    if(items.length===0){ sugEl.innerHTML='<div>No matches</div>'; sugEl.classList.remove("hidden"); return; }
-    sugEl.innerHTML = items.map(it=>(
-      '<div data-sym="'+it.symbol+'"><strong>'+it.symbol+
-      '</strong> — '+(it.longname||it.shortname||'')+
-      ' <span class="muted">('+(it.exchange||it.type||'')+')</span></div>'
-    )).join("");
+qEl.addEventListener("keydown", (e) => {
+  if(e.key === "Escape") {
+    sugEl.classList.add("hidden");
+    qEl.blur();
+  }
+});
+
+// Search API call
+async function searchStocks(query) {
+  try {
+    sugEl.innerHTML = '<div style="text-align:center;padding:16px"><span class="spinner"></span> Searching...</div>';
     sugEl.classList.remove("hidden");
-    sugEl.querySelectorAll("div[data-sym]").forEach(el=>{
-      el.onclick=()=>{ addWatch(el.getAttribute("data-sym")); sugEl.classList.add("hidden"); qEl.value=""; };
-    });
-  }catch(e){ /* ignore */ }
-}
-qEl.addEventListener("input", debounce(()=>searchStocks(qEl.value), 300));
-qEl.addEventListener("keydown", (e)=>{ if(e.key==="Escape"){ sugEl.classList.add("hidden"); }});
-
-// quotes
-async function getQuote(symbol){
-  const r = await fetch("/api/stocks/quote?symbol="+encodeURIComponent(symbol));
-  if(!r.ok) throw new Error("quote failed");
-  return await r.json();
-}
-
-async function renderCards(){
-  const cards=$("#cards"); cards.innerHTML="";
-  const list=loadWatch(); if(list.length===0){ cards.innerHTML='<div class="card"><em>No symbols yet. Use search above.</em></div>'; return; }
-  for(const s of list){
-    const card = document.createElement("div"); card.className="card";
-    card.innerHTML = '<div class="row" style="justify-content:space-between;align-items:baseline">'+
-      '<div><strong class="sym">'+s+'</strong> <span class="badge"></span></div>'+
-      '<div class="row"><button class="remove" data-sym="'+s+'">Remove</button></div>'+
-      '</div><div class="price">—</div><div class="muted">Loading…</div>';
-    cards.appendChild(card);
-    try{
-      const q = await getQuote(s);
-      card.querySelector(".sym").textContent = q.symbol || s;
-      card.querySelector(".badge").textContent = (q.longName||q.shortName||"") + (q.currency?(" · "+q.currency):"");
-      const price = Number(q.price);
-      const chg = Number(q.change), pct = Number(q.changePercent);
-      card.querySelector(".price").textContent = isNaN(price) ? "—" : price.toFixed(2);
-      const meta = card.querySelector(".muted");
-      meta.className = (chg>=0) ? "up" : "down";
-      meta.textContent = (isNaN(chg)||isNaN(pct)) ? "" : ((chg>=0?"+":"")+chg.toFixed(2)+" ("+(pct*100).toFixed(2)+"%)");
-    }catch(e){
-      card.querySelector(".muted").textContent = "Failed to load quote";
+    
+    const response = await fetch(`${API_BASE}/api/stocks/search?q=${encodeURIComponent(query)}`);
+    
+    if(!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
-    card.querySelector(".remove").onclick=()=> removeWatch(s);
+    
+    const data = await response.json();
+    const items = data.items || [];
+    
+    if(items.length === 0) {
+      sugEl.innerHTML = '<div style="text-align:center;padding:16px;color:#94a3b8">No matches found</div>';
+      return;
+    }
+    
+    sugEl.innerHTML = items.map(it => {
+      const alreadyAdded = watchlistSymbols.includes(it.symbol);
+      return `<div data-sym="${it.symbol}" style="${alreadyAdded ? 'opacity:0.5;cursor:not-allowed' : ''}">
+        <strong style="font-size:15px">${it.symbol}</strong>
+        ${it.longname || it.shortname ? `<br><span style="font-size:13px">${it.longname || it.shortname}</span>` : ''}
+        <span class="muted"> • ${it.exchange || it.type || 'N/A'}</span>
+        ${alreadyAdded ? ' <span style="color:#22c55e">✓ In watchlist</span>' : ''}
+      </div>`;
+    }).join("");
+    
+    sugEl.querySelectorAll("div[data-sym]").forEach(el => {
+      const sym = el.getAttribute("data-sym");
+      if(!watchlistSymbols.includes(sym)) {
+        el.onclick = () => addToWatchlist(sym);
+      }
+    });
+  } catch(e) {
+    sugEl.innerHTML = `<div style="text-align:center;padding:16px;color:#ef4444">❌ Search failed. Is the server running?</div>`;
+    console.error("Search error:", e);
   }
 }
-$("#refreshAll").onclick=renderCards;
 
-// boot
-if(sessionStorage.getItem("ok")==="1") showApp(); else showLogin();
-setActive("stocks");
-renderCards();
+// Add to watchlist
+function addToWatchlist(symbol) {
+  const sym = symbol.toUpperCase();
+  if(!watchlistSymbols.includes(sym)) {
+    watchlistSymbols.push(sym);
+    renderCards();
+  }
+  sugEl.classList.add("hidden");
+  qEl.value = "";
+}
+
+// Remove from watchlist
+function removeFromWatchlist(symbol) {
+  watchlistSymbols = watchlistSymbols.filter(s => s !== symbol);
+  delete quotesCache[symbol];
+  renderCards();
+}
+
+// Fetch quote
+async function getQuote(symbol) {
+  try {
+    const response = await fetch(`${API_BASE}/api/stocks/quote?symbol=${encodeURIComponent(symbol)}`);
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch(e) {
+    console.error(`Quote error for ${symbol}:`, e);
+    return null;
+  }
+}
+
+// Render watchlist cards
+async function renderCards() {
+  const container = $("#cards");
+  
+  if(watchlistSymbols.length === 0) {
+    container.innerHTML = '<div class="card empty">📭 Your watchlist is empty<br><span class="muted" style="font-size:12px">Search for stocks above to get started</span></div>';
+    return;
+  }
+  
+  container.innerHTML = watchlistSymbols.map(sym => `
+    <div class="card" id="card-${sym}">
+      <div class="meta-row">
+        <div>
+          <span class="symbol-name">${sym}</span>
+          <div class="badge">Loading...</div>
+        </div>
+        <button class="danger" onclick="removeFromWatchlist('${sym}')">✕ Remove</button>
+      </div>
+      <div class="price">—</div>
+      <div class="muted"><span class="spinner"></span> Fetching quote...</div>
+    </div>
+  `).join("");
+  
+  // Fetch all quotes
+  for(const sym of watchlistSymbols) {
+    const quote = await getQuote(sym);
+    const card = $(`#card-${sym}`);
+    if(!card) continue;
+    
+    if(!quote) {
+      card.querySelector(".badge").textContent = "Failed to load";
+      card.querySelector(".price").textContent = "—";
+      card.querySelector(".muted").innerHTML = '<span style="color:#ef4444">⚠️ Could not fetch quote</span>';
+      continue;
+    }
+    
+    quotesCache[sym] = quote;
+    
+    card.querySelector(".symbol-name").textContent = quote.symbol || sym;
+    card.querySelector(".badge").textContent = `${quote.longName || quote.shortName || ''} ${quote.currency ? '• ' + quote.currency : ''}`;
+    
+    const price = Number(quote.price);
+    const change = Number(quote.change);
+    const changePct = Number(quote.changePercent);
+    
+    card.querySelector(".price").textContent = isNaN(price) ? "—" : `$${price.toFixed(2)}`;
+    
+    const changeEl = card.querySelector(".muted");
+    if(!isNaN(change) && !isNaN(changePct)) {
+      const sign = change >= 0 ? '+' : '';
+      changeEl.className = change >= 0 ? 'up' : 'down';
+      changeEl.innerHTML = `${sign}$${change.toFixed(2)} (${sign}${(changePct * 100).toFixed(2)}%)`;
+    } else {
+      changeEl.textContent = 'No change data';
+    }
+  }
+}
+
+// Refresh all quotes
+$("#refreshAll").onclick = async () => {
+  if(watchlistSymbols.length === 0) return;
+  
+  const btn = $("#refreshAll");
+  const icon = $("#refreshIcon");
+  btn.classList.add("loading");
+  icon.style.display = "inline-block";
+  icon.style.animation = "spin 0.6s linear infinite";
+  
+  await renderCards();
+  
+  btn.classList.remove("loading");
+  icon.style.animation = "";
+};
+
+// ===== INITIALIZATION =====
+if(sessionActive) {
+  showApp();
+} else {
+  showLogin();
+}
 </script>
 </body>
 </html>
