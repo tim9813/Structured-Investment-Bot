@@ -83,7 +83,7 @@ button:hover{opacity:.9}
     <!-- Stocks -->
     <div id="content-stocks" class="hidden">
       <h3 style="margin-top:0">Stocks</h3>
-      <p class="muted">Search by name or ticker. Data via Yahoo (near real-time).</p>
+      <p class="muted">Search by name or ticker (Yahoo). Add to watchlist.</p>
 
       <!-- Search input + suggestions -->
       <input id="stockQuery" placeholder="Type name or ticker, e.g. tesla or TSLA">
@@ -135,31 +135,32 @@ $("#btnSave")?.addEventListener("click",()=>{
 const LS_KEY="watchlist";
 function loadWatch(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||"[]"); } catch{ return []; } }
 function saveWatch(list){ localStorage.setItem(LS_KEY, JSON.stringify(list)); }
-function addWatch(symbol){ const s = symbol.toUpperCase(); const list=new Set(loadWatch()); list.add(s); saveWatch([...list]); renderCards(); }
-function removeWatch(symbol){ const s = symbol.toUpperCase(); const next=loadWatch().filter(x=>x!==s); saveWatch(next); renderCards(); }
+function addWatch(symbol){ const s=symbol.toUpperCase(); const list=new Set(loadWatch()); list.add(s); saveWatch([...list]); renderCards(); }
+function removeWatch(symbol){ const s=symbol.toUpperCase(); const next=loadWatch().filter(x=>x!==s); saveWatch(next); renderCards(); }
 
 // debounce
-function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
+function debounce(fn,ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
 
 // search
 const qEl=$("#stockQuery"), sugEl=$("#suggestions");
 async function searchStocks(q){
   if(!q.trim()){ sugEl.classList.add("hidden"); sugEl.innerHTML=""; return; }
-  const r = await fetch("/api/stocks/search?q="+encodeURIComponent(q.trim()));
-  if(!r.ok){ return; }
-  const data = await r.json();
-  const items = data.items||[];
-  if(items.length===0){ sugEl.innerHTML='<div>No matches</div>'; sugEl.classList.remove("hidden"); return; }
-  sugEl.innerHTML = items.map(it=>(
-    `<div data-sym="${it.symbol}">
-      <strong>${it.symbol}</strong> — ${it.longname||it.shortname||''} <span class="muted">(${it.exchange||it.type||''})</span>
-    </div>`
-  )).join("");
-  sugEl.classList.remove("hidden");
-  // click handlers
-  sugEl.querySelectorAll("div[data-sym]").forEach(el=>{
-    el.onclick=()=>{ addWatch(el.getAttribute("data-sym")); sugEl.classList.add("hidden"); qEl.value=""; };
-  });
+  try{
+    const r = await fetch("/api/stocks/search?q="+encodeURIComponent(q.trim()));
+    if(!r.ok) throw new Error("search failed");
+    const data = await r.json();
+    const items = data.items||[];
+    if(items.length===0){ sugEl.innerHTML='<div>No matches</div>'; sugEl.classList.remove("hidden"); return; }
+    sugEl.innerHTML = items.map(it=>(
+      '<div data-sym="'+it.symbol+'"><strong>'+it.symbol+
+      '</strong> — '+(it.longname||it.shortname||'')+
+      ' <span class="muted">('+(it.exchange||it.type||'')+')</span></div>'
+    )).join("");
+    sugEl.classList.remove("hidden");
+    sugEl.querySelectorAll("div[data-sym]").forEach(el=>{
+      el.onclick=()=>{ addWatch(el.getAttribute("data-sym")); sugEl.classList.add("hidden"); qEl.value=""; };
+    });
+  }catch(e){ /* ignore */ }
 }
 qEl.addEventListener("input", debounce(()=>searchStocks(qEl.value), 300));
 qEl.addEventListener("keydown", (e)=>{ if(e.key==="Escape"){ sugEl.classList.add("hidden"); }});
@@ -167,7 +168,7 @@ qEl.addEventListener("keydown", (e)=>{ if(e.key==="Escape"){ sugEl.classList.add
 // quotes
 async function getQuote(symbol){
   const r = await fetch("/api/stocks/quote?symbol="+encodeURIComponent(symbol));
-  if(!r.ok) throw new Error("Quote failed");
+  if(!r.ok) throw new Error("quote failed");
   return await r.json();
 }
 
@@ -175,12 +176,11 @@ async function renderCards(){
   const cards=$("#cards"); cards.innerHTML="";
   const list=loadWatch(); if(list.length===0){ cards.innerHTML='<div class="card"><em>No symbols yet. Use search above.</em></div>'; return; }
   for(const s of list){
-    const card = document.createElement("div"); card.className="card"; card.innerHTML = `<div class="row" style="justify-content:space-between;align-items:baseline">
-      <div><strong class="sym">${s}</strong> <span class="badge"></span></div>
-      <div class="row"><button class="remove" data-sym="${s}">Remove</button></div>
-    </div>
-    <div class="price">—</div>
-    <div class="muted">Loading…</div>`;
+    const card = document.createElement("div"); card.className="card";
+    card.innerHTML = '<div class="row" style="justify-content:space-between;align-items:baseline">'+
+      '<div><strong class="sym">'+s+'</strong> <span class="badge"></span></div>'+
+      '<div class="row"><button class="remove" data-sym="'+s+'">Remove</button></div>'+
+      '</div><div class="price">—</div><div class="muted">Loading…</div>';
     cards.appendChild(card);
     try{
       const q = await getQuote(s);
@@ -190,13 +190,11 @@ async function renderCards(){
       const chg = Number(q.change), pct = Number(q.changePercent);
       card.querySelector(".price").textContent = isNaN(price) ? "—" : price.toFixed(2);
       const meta = card.querySelector(".muted");
-      const cls = (chg>=0) ? "up" : "down";
-      meta.className = cls;
-      meta.textContent = (isNaN(chg) || isNaN(pct)) ? "" : `${chg>=0?"+":""}${chg.toFixed(2)} (${(pct*100).toFixed(2)}%)`;
+      meta.className = (chg>=0) ? "up" : "down";
+      meta.textContent = (isNaN(chg)||isNaN(pct)) ? "" : ((chg>=0?"+":"")+chg.toFixed(2)+" ("+(pct*100).toFixed(2)+"%)");
     }catch(e){
       card.querySelector(".muted").textContent = "Failed to load quote";
     }
-    // remove button
     card.querySelector(".remove").onclick=()=> removeWatch(s);
   }
 }
@@ -204,7 +202,7 @@ $("#refreshAll").onclick=renderCards;
 
 // boot
 if(sessionStorage.getItem("ok")==="1") showApp(); else showLogin();
-setActive("stocks"); // open Stocks tab by default
+setActive("stocks");
 renderCards();
 </script>
 </body>
