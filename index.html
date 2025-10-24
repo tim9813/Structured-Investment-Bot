@@ -2,26 +2,35 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Login + Tabs</title>
+<title>Login + Tabs + Stocks</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{background:#0f172a;color:#e5e7eb;font-family:Arial;margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh}
-.box{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:18px;width:900px;max-width:95vw}
+body{background:#0f172a;color:#e5e7eb;font-family:Arial;margin:0;display:flex;justify-content:center;align-items:flex-start;min-height:100vh}
+.wrap{width:1100px;max-width:95vw;margin:24px}
+.box{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:18px}
 h2{margin:0 0 10px}
-label{display:block;margin-top:8px}
-input{width:100%;padding:8px;margin-top:5px;border-radius:6px;border:1px solid #1f2937;background:#0b1220;color:#e5e7eb}
+label{display:block;margin:8px 0 4px}
+input{width:100%;padding:8px;border:1px solid #1f2937;border-radius:6px;background:#0b1220;color:#e5e7eb}
 button{padding:8px 12px;border:none;border-radius:6px;background:#334155;color:#fff;cursor:pointer}
 button:hover{opacity:.9}
-.error{color:#ef4444;margin-top:10px;text-align:center;min-height:1em}
-.hidden{display:none}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hidden{display:none}
 .bar{display:flex;gap:8px;margin:8px 0}
 .tab{background:#334155;border:1px solid #1f2937;border-radius:8px;padding:8px 12px;cursor:pointer}
 .tab.active{background:#22c55e;color:#0b1220;font-weight:bold}
-#workspace{background:#ffffff;color:#111827;border:1px dashed #d1d5db;border-radius:10px;min-height:320px;padding:14px;margin-top:10px}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+#workspace{background:#ffffff;color:#111827;border:1px dashed #d1d5db;border-radius:10px;min-height:380px;padding:14px;margin-top:10px}
+.card{border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin:8px 0;background:#fff;color:#0b122a}
+.badge{font-size:12px;color:#475569}
+.price{font-weight:bold;font-size:18px}
+.up{color:#16a34a}.down{color:#dc2626}
+.suggest{background:#0b1220;border:1px solid #1f2937;border-radius:8px;margin-top:6px;max-height:220px;overflow:auto}
+.suggest div{padding:8px;border-bottom:1px solid #1f2937;cursor:pointer}
+.suggest div:hover{background:#0f172a}
+.muted{color:#9ca3af;font-size:12px}
 </style>
 </head>
 <body>
+<div class="wrap">
 
 <!-- LOGIN -->
 <div class="box" id="loginbox">
@@ -33,110 +42,170 @@ button:hover{opacity:.9}
   <div class="row" style="margin-top:10px">
     <button id="loginbtn">Sign in</button>
   </div>
-  <div class="error" id="err"></div>
-  <div style="color:#9ca3af;font-size:12px;margin-top:6px">Demo only: client-side check.</div>
+  <div id="err" class="muted" style="color:#ef4444;margin-top:8px"></div>
+  <div class="muted">Demo only: client-side check.</div>
 </div>
 
-<!-- APP (protected) -->
+<!-- APP -->
 <div class="box hidden" id="app">
-  <div class="top">
+  <div class="row" style="justify-content:space-between">
     <h2>✅ Dashboard</h2>
-    <div class="row">
-      <button id="logoutbtn">Log out</button>
-    </div>
+    <button id="logoutbtn">Log out</button>
   </div>
 
   <!-- Tabs -->
   <div class="bar">
     <div class="tab active" data-tab="add">Add Structure</div>
     <div class="tab" data-tab="view">View Structure</div>
+    <div class="tab" data-tab="stocks">Stocks</div>
   </div>
 
-  <!-- Workspace (clean white space) -->
   <div id="workspace">
-    <!-- Default content for "Add Structure" -->
+    <!-- Add Structure -->
     <div id="content-add">
       <h3 style="margin-top:0">Add Structure</h3>
-      <p style="margin:6px 0 12px">This is a clean area for your future form/UI.</p>
-      <!-- Placeholder inputs you can wire later -->
+      <p class="muted">Clean area for your future form.</p>
       <div class="row">
         <input id="sName" placeholder="Structure name" style="flex:1">
         <input id="sType" placeholder="Type" style="flex:1">
         <button id="btnSave">Save (placeholder)</button>
       </div>
-      <div id="saveMsg" style="color:#16a34a;margin-top:8px;display:none">Saved (placeholder only).</div>
+      <div id="saveMsg" class="muted" style="color:#16a34a;display:none;margin-top:6px">Saved (placeholder)</div>
     </div>
 
+    <!-- View Structure -->
     <div id="content-view" class="hidden">
       <h3 style="margin-top:0">View Structure</h3>
-      <p style="margin:6px 0 12px">This clean area is ready to list or display structures later.</p>
-      <!-- Placeholder table -->
-      <div style="overflow:auto">
-        <table border="1" cellpadding="6" cellspacing="0" style="border-color:#e5e7eb;background:#fff;color:#111827;width:100%;border-collapse:collapse">
-          <thead style="background:#f3f4f6">
-            <tr><th align="left">Name</th><th align="left">Type</th><th align="left">Created</th></tr>
-          </thead>
-          <tbody id="tblBody">
-            <tr><td colspan="3" style="color:#6b7280">No data yet. Will populate later.</td></tr>
-          </tbody>
-        </table>
+      <p class="muted">Ready to list your data later.</p>
+      <div class="card"><em>No data yet.</em></div>
+    </div>
+
+    <!-- Stocks -->
+    <div id="content-stocks" class="hidden">
+      <h3 style="margin-top:0">Stocks</h3>
+      <p class="muted">Search by name or ticker. Data via Yahoo (near real-time).</p>
+
+      <!-- Search input + suggestions -->
+      <input id="stockQuery" placeholder="Type name or ticker, e.g. tesla or TSLA">
+      <div id="suggestions" class="suggest hidden"></div>
+
+      <!-- Watchlist -->
+      <div class="row" style="justify-content:space-between;margin-top:10px">
+        <div class="muted">Watchlist</div>
+        <button id="refreshAll">Refresh</button>
       </div>
+      <div id="cards"></div>
     </div>
   </div>
 </div>
 
 <script>
-// ===== HARD-CODED CREDENTIALS =====
-const U="admin";
-const P="P@ssw0rd123";
+// ===== HARD-CODED LOGIN =====
+const U="admin", P="P@ssw0rd123";
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const loginBox=$("#loginbox"), app=$("#app"), err=$("#err");
 
-// Shortcuts
-const $=s=>document.querySelector(s);
-const $$=s=>document.querySelectorAll(s);
-
-// Elements
-const loginBox=$("#loginbox");
-const app=$("#app");
-const err=$("#err");
-
-// Login / Logout
+// login
 $("#loginbtn").onclick=()=>{
-  const u=$("#user").value.trim();
-  const p=$("#pass").value.trim();
+  const u=$("#user").value.trim(), p=$("#pass").value.trim();
   if(u===U && p===P){ sessionStorage.setItem("ok","1"); showApp(); }
-  else { err.textContent="❌ Invalid username or password"; }
+  else err.textContent="❌ Invalid username or password";
 };
 $("#logoutbtn").onclick=()=>{ sessionStorage.removeItem("ok"); showLogin(); };
-
-// Views
 function showLogin(){ app.classList.add("hidden"); loginBox.classList.remove("hidden"); err.textContent=""; }
 function showApp(){ loginBox.classList.add("hidden"); app.classList.remove("hidden"); }
 
-// Tabs
+// tabs
 function setActive(tab){
   $$(".tab").forEach(t=>t.classList.remove("active"));
   $(`.tab[data-tab="${tab}"]`).classList.add("active");
-  // Toggle content blocks
   $("#content-add").classList.toggle("hidden", tab!=="add");
   $("#content-view").classList.toggle("hidden", tab!=="view");
+  $("#content-stocks").classList.toggle("hidden", tab!=="stocks");
 }
-$$(".tab").forEach(t=>{
-  t.addEventListener("click",()=> setActive(t.dataset.tab));
+$$(".tab").forEach(t=> t.addEventListener("click",()=> setActive(t.dataset.tab)));
+
+// placeholder save
+$("#btnSave")?.addEventListener("click",()=>{
+  if(!$("#sName").value.trim() || !$("#sType").value.trim()) { alert("Enter both fields"); return; }
+  $("#saveMsg").style.display="block"; setTimeout(()=>$("#saveMsg").style.display="none",1500);
 });
 
-// Placeholder Save button (no backend yet)
-$("#btnSave").onclick=()=>{
-  const name=$("#sName").value.trim();
-  const type=$("#sType").value.trim();
-  if(!name||!type){ alert("Enter structure name and type"); return; }
-  // Later: POST to /api/structures
-  $("#saveMsg").style.display="block";
-  setTimeout(()=>$("#saveMsg").style.display="none",1500);
-};
+// ===== Stocks UI =====
+const LS_KEY="watchlist";
+function loadWatch(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||"[]"); } catch{ return []; } }
+function saveWatch(list){ localStorage.setItem(LS_KEY, JSON.stringify(list)); }
+function addWatch(symbol){ const s = symbol.toUpperCase(); const list=new Set(loadWatch()); list.add(s); saveWatch([...list]); renderCards(); }
+function removeWatch(symbol){ const s = symbol.toUpperCase(); const next=loadWatch().filter(x=>x!==s); saveWatch(next); renderCards(); }
 
-// Boot
+// debounce
+function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
+
+// search
+const qEl=$("#stockQuery"), sugEl=$("#suggestions");
+async function searchStocks(q){
+  if(!q.trim()){ sugEl.classList.add("hidden"); sugEl.innerHTML=""; return; }
+  const r = await fetch("/api/stocks/search?q="+encodeURIComponent(q.trim()));
+  if(!r.ok){ return; }
+  const data = await r.json();
+  const items = data.items||[];
+  if(items.length===0){ sugEl.innerHTML='<div>No matches</div>'; sugEl.classList.remove("hidden"); return; }
+  sugEl.innerHTML = items.map(it=>(
+    `<div data-sym="${it.symbol}">
+      <strong>${it.symbol}</strong> — ${it.longname||it.shortname||''} <span class="muted">(${it.exchange||it.type||''})</span>
+    </div>`
+  )).join("");
+  sugEl.classList.remove("hidden");
+  // click handlers
+  sugEl.querySelectorAll("div[data-sym]").forEach(el=>{
+    el.onclick=()=>{ addWatch(el.getAttribute("data-sym")); sugEl.classList.add("hidden"); qEl.value=""; };
+  });
+}
+qEl.addEventListener("input", debounce(()=>searchStocks(qEl.value), 300));
+qEl.addEventListener("keydown", (e)=>{ if(e.key==="Escape"){ sugEl.classList.add("hidden"); }});
+
+// quotes
+async function getQuote(symbol){
+  const r = await fetch("/api/stocks/quote?symbol="+encodeURIComponent(symbol));
+  if(!r.ok) throw new Error("Quote failed");
+  return await r.json();
+}
+
+async function renderCards(){
+  const cards=$("#cards"); cards.innerHTML="";
+  const list=loadWatch(); if(list.length===0){ cards.innerHTML='<div class="card"><em>No symbols yet. Use search above.</em></div>'; return; }
+  for(const s of list){
+    const card = document.createElement("div"); card.className="card"; card.innerHTML = `<div class="row" style="justify-content:space-between;align-items:baseline">
+      <div><strong class="sym">${s}</strong> <span class="badge"></span></div>
+      <div class="row"><button class="remove" data-sym="${s}">Remove</button></div>
+    </div>
+    <div class="price">—</div>
+    <div class="muted">Loading…</div>`;
+    cards.appendChild(card);
+    try{
+      const q = await getQuote(s);
+      card.querySelector(".sym").textContent = q.symbol || s;
+      card.querySelector(".badge").textContent = (q.longName||q.shortName||"") + (q.currency?(" · "+q.currency):"");
+      const price = Number(q.price);
+      const chg = Number(q.change), pct = Number(q.changePercent);
+      card.querySelector(".price").textContent = isNaN(price) ? "—" : price.toFixed(2);
+      const meta = card.querySelector(".muted");
+      const cls = (chg>=0) ? "up" : "down";
+      meta.className = cls;
+      meta.textContent = (isNaN(chg) || isNaN(pct)) ? "" : `${chg>=0?"+":""}${chg.toFixed(2)} (${(pct*100).toFixed(2)}%)`;
+    }catch(e){
+      card.querySelector(".muted").textContent = "Failed to load quote";
+    }
+    // remove button
+    card.querySelector(".remove").onclick=()=> removeWatch(s);
+  }
+}
+$("#refreshAll").onclick=renderCards;
+
+// boot
 if(sessionStorage.getItem("ok")==="1") showApp(); else showLogin();
-setActive("add"); // default tab
+setActive("stocks"); // open Stocks tab by default
+renderCards();
 </script>
 </body>
 </html>
