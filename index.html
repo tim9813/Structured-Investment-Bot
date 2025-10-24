@@ -1,113 +1,142 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simple Hardcoded Login Page</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #0f172a;
-      color: #e5e7eb;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .login-box {
-      background-color: #111827;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-      width: 320px;
-    }
-    h2 {
-      text-align: center;
-      color: #22c55e;
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border: 1px solid #1f2937;
-      border-radius: 6px;
-      background-color: #0b1220;
-      color: #e5e7eb;
-    }
-    button {
-      margin-top: 20px;
-      width: 100%;
-      padding: 10px;
-      background-color: #22c55e;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #16a34a;
-    }
-    .error {
-      color: #ef4444;
-      text-align: center;
-      margin-top: 10px;
-    }
-    #app {
-      display: none;
-      text-align: center;
-    }
-  </style>
+<meta charset="utf-8">
+<title>Login + Tabs</title>
+<style>
+body{background:#0f172a;color:#e5e7eb;font-family:Arial;margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh}
+.box{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:18px;width:900px;max-width:95vw}
+h2{margin:0 0 10px}
+label{display:block;margin-top:8px}
+input{width:100%;padding:8px;margin-top:5px;border-radius:6px;border:1px solid #1f2937;background:#0b1220;color:#e5e7eb}
+button{padding:8px 12px;border:none;border-radius:6px;background:#334155;color:#fff;cursor:pointer}
+button:hover{opacity:.9}
+.error{color:#ef4444;margin-top:10px;text-align:center;min-height:1em}
+.hidden{display:none}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bar{display:flex;gap:8px;margin:8px 0}
+.tab{background:#334155;border:1px solid #1f2937;border-radius:8px;padding:8px 12px;cursor:pointer}
+.tab.active{background:#22c55e;color:#0b1220;font-weight:bold}
+#workspace{background:#ffffff;color:#111827;border:1px dashed #d1d5db;border-radius:10px;min-height:320px;padding:14px;margin-top:10px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+</style>
 </head>
 <body>
-  <div class="login-box" id="login-box">
-    <h2>Member Login</h2>
-    <label for="username">Username</label>
-    <input type="text" id="username" placeholder="Enter username" />
-    <label for="password">Password</label>
-    <input type="password" id="password" placeholder="Enter password" />
-    <button id="loginBtn">Login</button>
-    <div class="error" id="error"></div>
+
+<!-- LOGIN -->
+<div class="box" id="loginbox">
+  <h2>🔒 Login</h2>
+  <label>Username</label>
+  <input id="user" type="text" placeholder="admin">
+  <label>Password</label>
+  <input id="pass" type="password" placeholder="password">
+  <div class="row" style="margin-top:10px">
+    <button id="loginbtn">Sign in</button>
+  </div>
+  <div class="error" id="err"></div>
+  <div style="color:#9ca3af;font-size:12px;margin-top:6px">Demo only: client-side check.</div>
+</div>
+
+<!-- APP (protected) -->
+<div class="box hidden" id="app">
+  <div class="top">
+    <h2>✅ Dashboard</h2>
+    <div class="row">
+      <button id="logoutbtn">Log out</button>
+    </div>
   </div>
 
-  <div id="app">
-    <h2>✅ Welcome inside!</h2>
-    <p>This is the protected area of your app.</p>
-    <button id="logoutBtn">Logout</button>
+  <!-- Tabs -->
+  <div class="bar">
+    <div class="tab active" data-tab="add">Add Structure</div>
+    <div class="tab" data-tab="view">View Structure</div>
   </div>
 
-  <script>
-    // === HARDCODED LOGIN DETAILS ===
-    const USERNAME = "admin";
-    const PASSWORD = "P@ssw0rd123"; // Change to your desired password
+  <!-- Workspace (clean white space) -->
+  <div id="workspace">
+    <!-- Default content for "Add Structure" -->
+    <div id="content-add">
+      <h3 style="margin-top:0">Add Structure</h3>
+      <p style="margin:6px 0 12px">This is a clean area for your future form/UI.</p>
+      <!-- Placeholder inputs you can wire later -->
+      <div class="row">
+        <input id="sName" placeholder="Structure name" style="flex:1">
+        <input id="sType" placeholder="Type" style="flex:1">
+        <button id="btnSave">Save (placeholder)</button>
+      </div>
+      <div id="saveMsg" style="color:#16a34a;margin-top:8px;display:none">Saved (placeholder only).</div>
+    </div>
 
-    const loginBox = document.getElementById('login-box');
-    const app = document.getElementById('app');
-    const error = document.getElementById('error');
+    <div id="content-view" class="hidden">
+      <h3 style="margin-top:0">View Structure</h3>
+      <p style="margin:6px 0 12px">This clean area is ready to list or display structures later.</p>
+      <!-- Placeholder table -->
+      <div style="overflow:auto">
+        <table border="1" cellpadding="6" cellspacing="0" style="border-color:#e5e7eb;background:#fff;color:#111827;width:100%;border-collapse:collapse">
+          <thead style="background:#f3f4f6">
+            <tr><th align="left">Name</th><th align="left">Type</th><th align="left">Created</th></tr>
+          </thead>
+          <tbody id="tblBody">
+            <tr><td colspan="3" style="color:#6b7280">No data yet. Will populate later.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 
-    document.getElementById('loginBtn').addEventListener('click', () => {
-      const user = document.getElementById('username').value.trim();
-      const pass = document.getElementById('password').value.trim();
+<script>
+// ===== HARD-CODED CREDENTIALS =====
+const U="admin";
+const P="P@ssw0rd123";
 
-      if (user === USERNAME && pass === PASSWORD) {
-        loginBox.style.display = 'none';
-        app.style.display = 'block';
-      } else {
-        error.textContent = '❌ Invalid username or password';
-      }
-    });
+// Shortcuts
+const $=s=>document.querySelector(s);
+const $$=s=>document.querySelectorAll(s);
 
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      app.style.display = 'none';
-      loginBox.style.display = 'block';
-      document.getElementById('username').value = '';
-      document.getElementById('password').value = '';
-      error.textContent = '';
-    });
-  </script>
+// Elements
+const loginBox=$("#loginbox");
+const app=$("#app");
+const err=$("#err");
+
+// Login / Logout
+$("#loginbtn").onclick=()=>{
+  const u=$("#user").value.trim();
+  const p=$("#pass").value.trim();
+  if(u===U && p===P){ sessionStorage.setItem("ok","1"); showApp(); }
+  else { err.textContent="❌ Invalid username or password"; }
+};
+$("#logoutbtn").onclick=()=>{ sessionStorage.removeItem("ok"); showLogin(); };
+
+// Views
+function showLogin(){ app.classList.add("hidden"); loginBox.classList.remove("hidden"); err.textContent=""; }
+function showApp(){ loginBox.classList.add("hidden"); app.classList.remove("hidden"); }
+
+// Tabs
+function setActive(tab){
+  $$(".tab").forEach(t=>t.classList.remove("active"));
+  $(`.tab[data-tab="${tab}"]`).classList.add("active");
+  // Toggle content blocks
+  $("#content-add").classList.toggle("hidden", tab!=="add");
+  $("#content-view").classList.toggle("hidden", tab!=="view");
+}
+$$(".tab").forEach(t=>{
+  t.addEventListener("click",()=> setActive(t.dataset.tab));
+});
+
+// Placeholder Save button (no backend yet)
+$("#btnSave").onclick=()=>{
+  const name=$("#sName").value.trim();
+  const type=$("#sType").value.trim();
+  if(!name||!type){ alert("Enter structure name and type"); return; }
+  // Later: POST to /api/structures
+  $("#saveMsg").style.display="block";
+  setTimeout(()=>$("#saveMsg").style.display="none",1500);
+};
+
+// Boot
+if(sessionStorage.getItem("ok")==="1") showApp(); else showLogin();
+setActive("add"); // default tab
+</script>
 </body>
 </html>
